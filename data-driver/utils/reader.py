@@ -67,10 +67,7 @@ Y_labels = [
 for y in Y_labels:
     X_labels = list(filter(lambda a: a != y, X_labels))
 
-print(X_labels)
-print(Y_labels)
-
-def read_file(input_file):
+def read_data(input_file):
     count = 0
     X = []
     Y = []
@@ -92,6 +89,9 @@ def read_file(input_file):
                 break
     return (X, Y)
 
-(X, Y) = read_file('data/sales_data.csv')
-print(X)
-print(Y)
+def read_labels():
+    return (X_labels, Y_labels)
+
+# (X, Y) = read_file('data/sales_data.csv')
+# print(X)
+# print(Y)
