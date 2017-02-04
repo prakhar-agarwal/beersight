@@ -88,7 +88,6 @@ def read_data(input_file):
             count += 1
             if( count % 10000 == 0):
                 print(count)
-                break
     return (raw, X, Y)
 
 def read_labels():
