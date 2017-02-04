@@ -12,37 +12,54 @@ import datetime
 from utils.loader import read_data
 
 # load dataset
-(subsegments, time_labels, columns, X, Y_unit_sales, Y_volume_sales, Y_volume_share) = read_data('/home/ubuntu/data/sales_data_all_subsegment_rollup.json')
+(subsegments, time_labels, columns, X_full, Y_unit_sales_full, Y_volume_sales_full, Y_volume_share_full) = read_data('/home/ubuntu/data/sales_data_all_subsegment_rollup.json')
 
 # load the model
 models = pickle.load(open('models.dat', 'rb'))
 
-print(models)
-print(time_labels)
-print(columns)
-print(X.shape)
-print(subsegments)
+data_raw = open('/home/ubuntu/data/sales_data_all_subsegment_rollup.json').read()
+# data_raw = open('/home/ubuntu/data/sales_data_subsegment_all.json').read()
+data = json.loads(data_raw)
 
+time_labels = []
 data_series = {}
 
-for (timestamp, x) in zip(time_labels, X):
-    
+columns = list(data[0].keys())
+
+for row in data:
     timestamp = parser.parse(row['date']).strftime('%s')
     if timestamp not in time_labels:
         time_labels.append(timestamp)
-    if row['subsegment'] not in data_series:
-        data_series[row['subsegment']] = { 'subsegment': row['subsegment'] }
+    if row['ab_subsegment_value'] not in data_series:
+        data_series[row['ab_subsegment_value']] = { 'subsegment': row['ab_subsegment_value'] }
         for c in columns:
-            data_series[row['subsegment']][c] = []
+            if c == 'ab_subsegment_value' :
+                data_series[row['ab_subsegment_value']]['subsegment_value'] = []
+                continue
+            data_series[row['ab_subsegment_value']][c] = []
     for c in row.keys():
-        data_series[row['subsegment']][c].append(row[c])
+        if c == 'ab_subsegment_value' :
+            data_series[row['ab_subsegment_value']]['subsegment_value'].append(row[c])
+            continue
+        data_series[row['ab_subsegment_value']][c].append(row[c])
 
+# make predictions for the last 8 weeks for back-tested data
+backtest = -16
+for (subsegment, s) in zip(subsegments, range(0, len(subsegments))):
+     model_unit_sales = models[subsegment]['unit_sales']
+     model_volume_sales = models[subsegment]['volume_sales']
+     model_volume_share = models[subsegment]['volume_share']
+     X_test = X_full[s][-16:]
+     y_unit_sales_test = Y_unit_sales_full[s][-16:]
+     y_volume_sales_test = Y_volume_sales_full[s][-16:]
+     y_volume_share_test = Y_volume_share_full[s][-16:]
+     predictions_unit_sales = model_unit_sales.predict(X_test)
+     predictions_volume_sales = model_volume_sales.predict(X_test)
+     predictions_volume_share = model_volume_share.predict(X_test)
+     data_series[subsegment]['predicted_unit_sales'] = predictions_unit_sales.tolist()
+     data_series[subsegment]['predicted_volume_sales'] = predictions_volume_sales.tolist()
+     data_series[subsegment]['predicted_volume_share_of_category'] = predictions_volume_share.tolist()
 
-# make predictions for test data
-y_pred = model.predict(X_test)
-predictions = [round(value) for value in y_pred]
-print( y_test[0:10] )
-print( predictions[0:10] )
 
 # ---------------------------------------------------
 # Flask app to serve the data, model and predictions
@@ -64,9 +81,15 @@ def index():
 def get_data():
     return jsonify({'time_labels': time_labels, 'data': data_series})
 
+# @app.route('/predict', methods = ['POST'])
+# def predict_data():
+#     body = request.get_json(force=True, silent=True)
+#     subsegment = body['subsegment']
+#     return jsonify({ 'error' : 'Invalid json.' })
+
 
 if __name__ == '__main__':
-  app.run( 
+   app.run( 
         host="0.0.0.0",
-        port=8080
+        port=8081
   )
