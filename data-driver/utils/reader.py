@@ -69,24 +69,27 @@ for y in Y_labels:
 
 def read_data(input_file):
     count = 0
+    raw = []
     X = []
     Y = []
     with open(input_file) as infile:
         csv_reader = csv.DictReader(infile, fieldnames=fields)
         next(csv_reader)
         for row in csv_reader:
+            raw.append(row)
             input_row = {}
             for label in X_labels:
                 input_row[label] = row[label]
             X.append(input_row)
             output_row = {}
             for target in Y_labels:
-                output_row[label] = row[label]
+                output_row[target] = row[target]
             Y.append(output_row)
             count += 1
             if( count % 10000 == 0):
                 print(count)
-    return (X, Y)
+                break
+    return (raw, X, Y)
 
 def read_labels():
     return (X_labels, Y_labels)
