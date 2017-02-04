@@ -1,7 +1,7 @@
 import os
 import csv
 
-fields = ['product'
+fields = ['product',
 'brewer_value',
 'brand_value',
 'package_value',
