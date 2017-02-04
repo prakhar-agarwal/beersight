@@ -2,6 +2,7 @@ import numpy as np
 import xgboost
 from sklearn import model_selection
 from sklearn import cross_validation, linear_model, ensemble
+from sklearn.svm import LinearSVR
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import Imputer
 from math import sqrt
@@ -25,6 +26,14 @@ def get_model(name='xgb'):
         return ensemble.AdaBoostRegressor(n_estimators=500)
     elif name == 'rf':
         return ensemble.RandomForestRegressor(n_estimators=500)
+    elif name == 'gb':
+        return ensemble.GradientBoostingRegressor(n_estimators=500)
+    elif name == 'huber':
+        return linear_model.HuberRegressor()
+    elif name == 'sgd':
+        return linear_model.SGDRegressor()
+    elif name == 'svr':
+        return LinearSVR()
 
 model_name = sys.argv[1]
 data_raw = open('/home/ubuntu/data/sales_data_all_subsegment_rollup.json').read()
@@ -68,6 +77,9 @@ predictions_volume_share = model_volume_share.predict(X_test)
 rms_unit_sales = sqrt(mean_squared_error(y_test_unit_sales[:20], predictions_unit_sales[:20]))
 rms_volume_sales = sqrt(mean_squared_error(y_test_volume_sales[:20], predictions_volume_sales[:20]))
 rms_volume_share = sqrt(mean_squared_error(y_test_volume_share[:20], predictions_volume_share[:20]))
+#rms_unit_sales = sqrt(mean_squared_error(y_test_unit_sales, predictions_unit_sales))
+#rms_volume_sales = sqrt(mean_squared_error(y_test_volume_sales, predictions_volume_sales))
+#rms_volume_share = sqrt(mean_squared_error(y_test_volume_share, predictions_volume_share))
 print('Unit Sales  r_squared', r2_score(y_test_unit_sales, predictions_unit_sales))
 print('Volume Sales  r_squared', r2_score(y_test_volume_sales, predictions_volume_sales))
 print('Volume Shares  r_squared', r2_score(y_test_volume_share, predictions_volume_share))
