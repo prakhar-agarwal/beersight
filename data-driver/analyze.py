@@ -2,7 +2,7 @@ import numpy as np
 import xgboost
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
-from sklearn import cross_validation
+from sklearn import cross_validation, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 from math import sqrt
 import pickle
@@ -10,6 +10,18 @@ import pickle
 import json
 
 from utils.loader import read_data
+
+def get_model(name='xgb'):
+    """TODO: Docstring for function.
+
+    :arg1: TODO
+    :returns: TODO
+
+    """
+    if name == 'xgb':
+        return xgboost.XGBRegressor(max_depth=10, n_estimators=500)
+    elif name == 'linearreg':
+        return linear_model.LinearRegression()
 
 # load dataset
 (X, Y_unit_sales, Y_volume_sales, Y_volume_share) = read_data('/home/ubuntu/data/sales_data_all_subsegment_rollup.json')
@@ -29,14 +41,17 @@ y_test_volume_share = Y_volume_share[split_point:]
 
 # model UNIT SALES information
 model_unit_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
+model_unit_sales = get_model('xgb')
 model_unit_sales.fit(X_train, y_train_unit_sales)
 
 # model VOLUME SALES information
 model_volume_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
+model_volume_sales = get_model('xgb')
 model_volume_sales.fit(X_train, y_train_volume_sales)
 
 # model VOLUME SHARE information
 model_volume_share = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
+model_volume_share = get_model('xgb')
 model_volume_share.fit(X_train, y_train_volume_share)
 
 # make predictions to evalute model on test data
