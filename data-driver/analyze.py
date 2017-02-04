@@ -4,6 +4,7 @@ from sklearn import model_selection
 from sklearn.metrics import accuracy_score
 from sklearn import cross_validation
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import Imputer
 from math import sqrt
 
 import json
@@ -35,6 +36,8 @@ for row in data:
         j += 1
     i += 1    
 
+imputer = Imputer()
+X = imputer.fit_transform(X)
 # prepare the Y vectors
 Y_unit_sales = np.array([ row["sum_unit_sales"]  for row in data ])
 Y_volume_sales = np.array([ row["sum_volume_sales"]  for row in data ])
@@ -42,19 +45,19 @@ Y_volume_share = np.array([ row["sum_volume_share_of_category"]  for row in data
 
 seed = 7
 test_size = 0.10
-X_train, X_test, y_train_unit_sales, y_test_unit_sales = cross_validation.train_test_split(X, Y_unit_sales, test_size=test_size, random_state=seed)
-X_train, X_test, y_train_volume_sales, y_test_volume_sales = cross_validation.train_test_split(X, Y_volume_sales, test_size=test_size, random_state=seed)
-X_train, X_test, y_train_volume_share, y_test_volume_share = cross_validation.train_test_split(X, Y_volume_share, test_size=test_size, random_state=seed)
 
 # model UNIT SALES information
+X_train, X_test, y_train_unit_sales, y_test_unit_sales = cross_validation.train_test_split(X, Y_unit_sales, test_size=test_size, random_state=seed)
 model_unit_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
 model_unit_sales.fit(X_train, y_train_unit_sales)
 
 # model VOLUME SALES information
+X_train, X_test, y_train_volume_sales, y_test_volume_sales = cross_validation.train_test_split(X, Y_volume_sales, test_size=test_size, random_state=seed)
 model_volume_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
 model_volume_sales.fit(X_train, y_train_volume_sales)
 
 # model VOLUME SHARE information
+X_train, X_test, y_train_volume_share, y_test_volume_share = cross_validation.train_test_split(X, Y_volume_share, test_size=test_size, random_state=seed)
 model_volume_share = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
 model_volume_share.fit(X_train, y_train_volume_share)
 
