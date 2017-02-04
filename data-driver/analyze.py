@@ -48,19 +48,15 @@ y_train_volume_share = Y_volume_share[:split_point]
 y_test_volume_share = Y_volume_share[split_point:]
 
 # model UNIT SALES information
-model_unit_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
-model_unit_sales = get_model('xgb')
+model_unit_sales = get_model(model_name)
 model_unit_sales.fit(X_train, y_train_unit_sales)
 
 # model VOLUME SALES information
-model_volume_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
-model_volume_sales = get_model('xgb')
+model_volume_sales = get_model(model_name)
 model_volume_sales.fit(X_train, y_train_volume_sales)
 
 # model VOLUME SHARE information
-model_volume_share = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
-model_volume_share = get_model('xgb')
->>>>>>> 361041320d1d0ed351a3d31a434db29c74dd6db4
+model_volume_share = get_model(model_name)
 model_volume_share.fit(X_train, y_train_volume_share)
 
 # make predictions to evalute model on test data
@@ -82,7 +78,8 @@ models = {
     'unit_sales': model_volume_share
 }
 
-if sys.argv[2] == 'save':
-   print('Saving models')
-   pickle.dump(models, open('models.dat', 'wb'))
+if len(sys.argv) > 2:
+   if sys.argv[2] == 'save':
+     print('Saving models')
+     pickle.dump(models, open('models.dat', 'wb'))
 
