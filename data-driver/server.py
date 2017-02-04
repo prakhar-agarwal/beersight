@@ -23,6 +23,7 @@ data = json.loads(data_raw)
 
 time_labels = []
 data_series = {}
+metadata = {}
 
 columns = list(data[0].keys())
 
@@ -59,6 +60,33 @@ for (subsegment, s) in zip(subsegments, range(0, len(subsegments))):
      data_series[subsegment]['predicted_unit_sales'] = predictions_unit_sales.tolist()
      data_series[subsegment]['predicted_volume_sales'] = predictions_volume_sales.tolist()
      data_series[subsegment]['predicted_volume_share_of_category'] = predictions_volume_share.tolist()
+     maxs = np.nanmax(X_full[s], axis=0)
+     mins = np.nanmin(X_full[s], axis=0)
+     means = np.nanmean(X_full[s], axis=0)
+     stds = np.nanstd(X_full[s], axis=0)
+     metadata[s] = {}
+     metadata[s]['knobs'] = {
+         'sum_feature_count': {
+             'lower_limit': mins[15],
+             'upper_limit': maxs[15],
+             'mean': means[15],
+             'std': stds[15]
+         },
+         'sum_display_count': {
+             'lower_limit': mins[10],
+             'upper_limit': maxs[10],
+             'mean': means[10],
+             'std': stds[10]
+         },
+         'price_per_unit': {
+             'lower_limit': mins[0],
+             'upper_limit': maxs[0],
+             'mean': means[0],
+             'std': stds[0]
+         }
+     }
+     data_series[subsegment]['knobs'] = metadata[s]['knobs']
+
 
 
 # ---------------------------------------------------
@@ -81,11 +109,36 @@ def index():
 def get_data():
     return jsonify({'time_labels': time_labels, 'data': data_series})
 
-# @app.route('/predict', methods = ['POST'])
-# def predict_data():
-#     body = request.get_json(force=True, silent=True)
-#     subsegment = body['subsegment']
-#     return jsonify({ 'error' : 'Invalid json.' })
+@app.route('/predict', methods = ['GET', 'POST'])
+def predict_data():
+    look_forward = 12
+    body = request.get_json(force=True, silent=True)
+    subsegment = body['subsegment']
+    model_unit_sales = models[subsegment]['unit_sales']
+    model_volume_sales = models[subsegment]['volume_sales']
+    model_volume_share = models[subsegment]['volume_share']
+    s = subsegments.index(subsegment)
+    X_test = X_full[s][-4*look_forward::4]
+    for record in X_test:
+        if( 'sum_feature_count' in body ):
+            record[15] = body['sum_feature_count']
+        if( 'sum_display_count' in body ):
+            record[10] = body['sum_display_count']
+        if( 'price_per_unit' in body ):
+            record[0] = body['price_per_unit']
+    # show the previous value again for visual continuity
+    X_test[0] = X_full[s][-1]
+    predictions_unit_sales = model_unit_sales.predict(X_test)
+    predictions_volume_sales = model_volume_sales.predict(X_test)
+    predictions_volume_share = model_volume_share.predict(X_test)
+    predictions_unit_sales = model_unit_sales.predict(X_test)
+    predictions_volume_sales = model_volume_sales.predict(X_test)
+    predictions_volume_share = model_volume_share.predict(X_test)
+    response = {}
+    response['forecasted_unit_sales'] = predictions_unit_sales.tolist()
+    response['forecasted_volume_sales'] = predictions_volume_sales.tolist()
+    response['forecasted_volume_share_of_category'] = predictions_volume_share.tolist()
+    return jsonify({ 'data': response } )
 
 
 if __name__ == '__main__':
