@@ -48,17 +48,14 @@ for (subsegment, s) in zip(subsegments, list(range(0, len(subsegments)))):
     y_test_volume_share = Y_volume_share[split_point:]
     
     # model UNIT SALES information
-    model_unit_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
     model_unit_sales = get_model('xgb')
     model_unit_sales.fit(X_train, y_train_unit_sales)
     
     # model VOLUME SALES information
-    model_volume_sales = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
     model_volume_sales = get_model('xgb')
     model_volume_sales.fit(X_train, y_train_volume_sales)
     
     # model VOLUME SHARE information
-    model_volume_share = xgboost.XGBRegressor(max_depth=10, n_estimators=500)
     model_volume_share = get_model('xgb')
     model_volume_share.fit(X_train, y_train_volume_share)
     
@@ -75,12 +72,15 @@ for (subsegment, s) in zip(subsegments, list(range(0, len(subsegments)))):
     print('Volume Sales  rms', rms_volume_sales)
     print('Volume Shares rms', rms_volume_share)
     
-    models = {
+    model = {
         'unit_sales': model_unit_sales,
         'volume_sales': model_volume_sales,
         'volume_share': model_volume_share
     }
-    
-print('Saving models')
-pickle.dump(models, open('models.dat', 'wb'))
 
+    models[subsegment] = model
+    
+if len(sys.argv) > 2:
+    if sys.argv[2] == 'save':
+        print('Saving models')
+        pickle.dump(models, open('models.dat', 'wb'))
